@@ -1,0 +1,43 @@
+[project]
+name = "jenkins-logs"
+version = "0.0.1"
+description = "Projeto para buscar os dados de logs de jobs do Jenkins para salva-los no Blob Storage, de modo a reduzir o espaço ocupado em disco nas VMs."
+authors = [
+    {name = "G51H",email = "rodrigo.anjinho.prestserv@transpetro.com.br"}
+]
+readme = "README.md"
+requires-python = ">=3.11,<4.0"
+dependencies = [
+]
+
+[tool.taskipy.tasks]
+format = "ruff format --preview ."
+lint = "ruff check --fix --exit-non-zero-on-fix"
+dev = "uvicorn webserver:app --port 8080 --host 0.0.0.0 --reload"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.dev.dependencies]
+taskipy = "^1.14.1"
+ruff = "^0.12.0"
+pytest = "^8.4.1"
+
+[tool.poetry.scripts]
+test = "pytest:main"
+
+[tool.coverage.run]
+concurrency = ["thread", "greenlet"]
+
+[tool.pytest.ini_options]
+pythonpath = "."
+addopts = '-p no:warnings'
+asyncio_mode = "strict"
+
+[tool.ruff.lint]
+preview = true
+select = ['I', 'F', 'E', 'W', 'PL', 'PT', 'FAST']
+
+
+
