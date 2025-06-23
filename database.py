@@ -7,6 +7,7 @@ from sqlalchemy import (
     DateTime,
     UniqueConstraint,
     create_engine,
+    func,
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -22,10 +23,19 @@ class BuildRecord(Base):
     job_name = Column(String, nullable=False)
     build_number = Column(Integer, nullable=False)
     blob_url = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=func.now())
     __table_args__ = (
         UniqueConstraint("job_name", "build_number", name="uq_job_build"),
     )
+
+
+class FailedJobReport(Base):
+    __tablename__ = 'failed_job_reports'
+
+    id = Column(Integer, primary_key=True, index=True)
+    job_name = Column(String, nullable=False)
+    url = Column(String, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
 settings = Settings()

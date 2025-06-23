@@ -1,6 +1,7 @@
 from typing import List
 import aiohttp
 import requests
+from database import SessionLocal
 from jenkins_log.schemas import (
     BuildsList,
     Job,
@@ -48,13 +49,23 @@ async def report_failed_jobs(
     build_list: BuildsList,
     job: Job
 ) -> List[ReportList]:
-    reports = []
-    if build_list.disable == "false":
-        if build_list.healthReport.description.contains("falharam"):
-            report = ReportJob(jobName=job.name, url=job.url)
-            reports.append(report)
-
-    return reports
+    reports: List[ReportList] = []
+    session = SessionLocal()
+    try:
+        if build_list.disable == "false":
+            if build_list.healthReport.description.contains("falharam"):
+                failed = ReportJob(
+                    job_name=job.name,
+                    url=job.url
+                )
+                session.add(failed)
+                report = ReportList(jobName=job.name, url=job.url)
+                reports.append(report)
+        if reports:
+            session.commit()
+        return reports
+    finally:
+        session.close()
 
 
 async def extract_builds_to_blob(url: str) -> aiohttp.ClientResponse | None:
