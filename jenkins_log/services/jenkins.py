@@ -14,7 +14,7 @@ from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
 settings = Settings()
 
 
-def jenkins_jobs_list():
+def jenkins_jobs_list() -> JobsList | None:
     try:
         response = requests.get(
             settings.JENKINS_JOBS_LIST,
@@ -29,7 +29,7 @@ def jenkins_jobs_list():
         return None
 
 
-async def extract_builds_range(job):
+async def extract_builds_range(job: Job) -> BuildsList | None:
     url = job.url + "api/json"
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
@@ -57,7 +57,7 @@ async def report_failed_jobs(
     return reports
 
 
-async def extract_builds_to_blob(url):
+async def extract_builds_to_blob(url: str) -> aiohttp.ClientResponse | None:
     url = url + "api/json"
 
     blob_service_client = BlobServiceClient.from_connection_string(
