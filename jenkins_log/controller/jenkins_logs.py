@@ -1,34 +1,34 @@
-from jenkins_log.services.jenkins import (
-    extract_builds_info,
-    extract_builds_range,
-    jenkins_jobs_list,
-    report_failed_jobs,
+from tasks import (
+    extract_builds_range_task,
+    extract_builds_to_blob_task,
+    jenkins_jobs_list_task,
+    report_failed_jobs_task,
 )
 
 
 async def processar_logs_jenkins():
     all_reports = []
 
-    list_jobs = jenkins_jobs_list()
+    result = jenkins_jobs_list_task.delay()
+    list_jobs = result.get()
 
     if list_jobs.jobs and list_jobs.jobs:
         for job in list_jobs.jobs:
+            build_info_result = extract_builds_range_task.delay(job)
+            build_info = build_info_result.get()
 
-            build_info = await extract_builds_range(job)
-            reports = await report_failed_jobs(build_info, job)
+            reports_result = report_failed_jobs_task.delay(build_info, job)
+            reports = reports_result.get()
             all_reports.extend(reports)
 
             if build_info:
-
                 first_build_number = build_info.firstBuild.number
                 last_build_number = build_info.lastCompletedBuild.number
 
                 for build_number in range(first_build_number, last_build_number + 1):
-
                     url = f"http://s6006as2917:8080/job/{job.name}/{build_number}/api/json"
-                    build_info = await extract_builds_info(url)
-                    return build_info
+                    blob_result = extract_builds_to_blob_task.delay(url)
+                    return blob_result
 
             else:
-
                 print(f"Nenhum build encontrado para o job: {job.name}")

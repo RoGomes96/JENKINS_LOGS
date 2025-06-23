@@ -1,8 +1,15 @@
 from typing import List
 import aiohttp
 import requests
-from jenkins_log.schemas import BuildsList, Job, JobsList, ReportJob, ReportList
+from jenkins_log.schemas import (
+    BuildsList,
+    Job,
+    JobsList,
+    ReportJob,
+    ReportList
+)
 from settings import Settings
+from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
 
 settings = Settings()
 
@@ -10,7 +17,8 @@ settings = Settings()
 def jenkins_jobs_list():
     try:
         response = requests.get(
-            settings.JENKINS_JOBS_LIST, auth=(settings.USERNAME, settings.ACCESS_TOKEN)
+            settings.JENKINS_JOBS_LIST,
+            auth=(settings.USERNAME, settings.ACCESS_TOKEN)
         )
         if response.status_code == 200:
             jobs_list = JobsList(**response.json())
@@ -30,30 +38,46 @@ async def extract_builds_range(job):
                     build_list = BuildsList(**await response.json())
                     return build_list
             except Exception as e:
-                print(f"Erro ao obter os builds do job {job.name} no jenkins: {e}")
+                print(
+                    f"Erro ao obter builds do job {job.name} no jenkins: {e}"
+                )
                 return None
 
 
-async def report_failed_jobs(build_list: BuildsList, job: Job) -> List[ReportList]:
+async def report_failed_jobs(
+    build_list: BuildsList,
+    job: Job
+) -> List[ReportList]:
     reports = []
-    if build_list.disable == 'false':
-
-        if build_list.healthReport.description.contains('falharam'):
-
+    if build_list.disable == "false":
+        if build_list.healthReport.description.contains("falharam"):
             report = ReportJob(jobName=job.name, url=job.url)
             reports.append(report)
 
     return reports
 
 
-async def extract_builds_info(url):
+async def extract_builds_to_blob(url):
     url = url + "api/json"
+
+    blob_service_client = BlobServiceClient.from_connection_string(
+        settings.CONNECTION_STRING
+    )
+
+    blob_client = blob_service_client.get_blob_client(
+        container=settings.CONTAINER_NAME, blob=settings.BLOB_NAME
+    )
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
             try:
                 if response.status == 200:
-                    response = await response.json()
-                    return response
+                    await blob_client.upload_blob(
+                        response.content,
+                        overwrite=True
+                    )
+                return response
             except Exception as e:
-                print(f"Erro ao obter as informações da build {url} no jenkins: {e}")
+                print(
+                    f"Erro ao obter informações da build {url} no jenkins: {e}"
+                )
                 return None
