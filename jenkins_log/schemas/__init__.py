@@ -16,6 +16,21 @@ class Build(BaseModel):
     number: int
 
 
+class HealthReport(BaseModel):
+    description: str
+
+
 class BuildsList(BaseModel):
     firstBuild: Build
     lastCompletedBuild: Build
+    healthReport: List[HealthReport]
+    disabled: str
+
+
+class ReportJob(BaseModel):
+    jobName: str
+    url: str
+
+
+class ReportList(BaseModel):
+    jobs: List[ReportJob]
