@@ -1,6 +1,7 @@
+from typing import List
 import aiohttp
 import requests
-from jenkins_log.schemas import BuildsList, JobsList
+from jenkins_log.schemas import BuildsList, Job, JobsList, ReportJob, ReportList
 from settings import Settings
 
 settings = Settings()
@@ -26,11 +27,23 @@ async def extract_builds_range(job):
         async with session.get(url) as response:
             try:
                 if response.status == 200:
-                    build_range = BuildsList(**await response.json())
-                    return build_range
+                    build_list = BuildsList(**await response.json())
+                    return build_list
             except Exception as e:
                 print(f"Erro ao obter os builds do job {job.name} no jenkins: {e}")
                 return None
+
+
+async def report_failed_jobs(build_list: BuildsList, job: Job) -> List[ReportList]:
+    reports = []
+    if build_list.disable == 'false':
+
+        if build_list.healthReport.description.contains('falharam'):
+
+            report = ReportJob(jobName=job.name, url=job.url)
+            reports.append(report)
+
+    return reports
 
 
 async def extract_builds_info(url):
