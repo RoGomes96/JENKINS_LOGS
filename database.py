@@ -30,7 +30,11 @@ class BuildRecord(Base):
 
 settings = Settings()
 engine = create_engine(settings.DB_URL, echo=False)
-SessionLocal = sessionmaker(bind=engine)
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
 
 
 def init_db():

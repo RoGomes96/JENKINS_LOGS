@@ -1,3 +1,4 @@
+from database import BuildRecord, SessionLocal
 from tasks import (
     extract_builds_range_task,
     extract_builds_to_blob_task,
@@ -12,23 +13,47 @@ async def processar_logs_jenkins():
     result = jenkins_jobs_list_task.delay()
     list_jobs = result.get()
 
-    if list_jobs.jobs and list_jobs.jobs:
-        for job in list_jobs.jobs:
-            build_info_result = extract_builds_range_task.delay(job)
-            build_info = build_info_result.get()
+    if not list_jobs or not list_jobs.jobs:
+        return None
 
-            reports_result = report_failed_jobs_task.delay(build_info, job)
-            reports = reports_result.get()
+    db = SessionLocal()
+    try:
+        for job in list_jobs.jobs:
+            build_info = extract_builds_range_task.delay(job).get()
+
+            reports = report_failed_jobs_task.delay(build_info, job).get()
+
             all_reports.extend(reports)
 
-            if build_info:
-                first_build_number = build_info.firstBuild.number
-                last_build_number = build_info.lastCompletedBuild.number
+            if not build_info:
+                print(f"Nenhum build para {job.name}")
+                continue
 
-                for build_number in range(first_build_number, last_build_number + 1):
-                    url = f"http://s6006as2917:8080/job/{job.name}/{build_number}/api/json"
-                    blob_result = extract_builds_to_blob_task.delay(url)
+            start = build_info.firstBuild.number
+            end = build_info.lastCompletedBuild.number
+
+            for num in range(start, end + 1):
+                # Checagem do Banco de Dados
+                exists = db.query(BuildRecord)\
+                            .filter_by(job_name=job.name, build_number=num)\
+                            .first()
+                if exists:
+                    continue
+
+                url = f"http://s6006as2917:8080/job/{job.name}/{num}/api/json"
+                blob_result = extract_builds_to_blob_task.delay(url).get()
+                if blob_result:
+                    rec = BuildRecord(
+                        job_name=job.name,
+                        build_number=num,
+                        blob_url=blob_result.url
+                    )
+                    db.add(rec)
+                    db.commit()
+
                     return blob_result
 
-            else:
-                print(f"Nenhum build encontrado para o job: {job.name}")
+        return None
+
+    finally:
+        db.close()

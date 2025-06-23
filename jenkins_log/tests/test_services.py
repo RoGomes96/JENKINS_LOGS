@@ -1,11 +1,15 @@
 import pytest
+from unittest.mock import AsyncMock, MagicMock, patch
 from jenkins_log.schemas import BuildsList
-from jenkins_log.services.jenkins import jenkins_jobs_list
-from unittest.mock import AsyncMock, patch, MagicMock
+from jenkins_log.services.jenkins import (
+    jenkins_jobs_list,
+    extract_builds_range
+)
 
 
 @patch("jenkins_log.services.jenkins.requests.get")
 def test_jenkins_jobs_list_success(mock_get):
+    # Arrange
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.json.return_value = {
@@ -19,56 +23,65 @@ def test_jenkins_jobs_list_success(mock_get):
     }
     mock_get.return_value = mock_response
 
+    # Act
     result = jenkins_jobs_list()
-    assert result.jobs[0].name == "Job1"
+
+    # Assert
+    assert len(result.jobs) == 1
+    job = result.jobs[0]
+    print(job)
+    assert job.name == "Job1"
+    assert job.url == "http://localhost/job1/"
 
 
 @patch("jenkins_log.services.jenkins.requests.get")
 def test_jenkins_jobs_list_failure(mock_get):
+    # Arrange
     mock_get.side_effect = Exception("Erro na requisição")
+
+    # Act
     result = jenkins_jobs_list()
+
+    # Assert
     assert result is None
 
 
 @pytest.mark.asyncio
-@pytest.mark.asyncio
 async def test_extract_builds_range():
-    from jenkins_log.services.jenkins import extract_builds_range
-
-    # 1) Mock do response
+    # Arrange
+    # 1) mock da resposta JSON
     mock_response = AsyncMock()
     mock_response.status = 200
-    mock_response.json = AsyncMock(
-        return_value={
-            "firstBuild": {"number": 1},
-            "lastCompletedBuild": {"number": 5},
-            "healthReport": [],
-            "disabled": "false",
-        }
-    )
+    mock_response.json = AsyncMock(return_value={
+        "firstBuild": {"number": 1},
+        "lastCompletedBuild": {"number": 5},
+        "healthReport": [],
+        "disabled": "false",
+    })
 
-    # 2) Mock do context manager de session.get()
-    mock_get_cm = MagicMock()
+    # 2) context manager para session.get()
+    mock_get_cm = AsyncMock()
     mock_get_cm.__aenter__.return_value = mock_response
     mock_get_cm.__aexit__.return_value = None
 
-    # 3) Mock da sessão em si
+    # 3) sessão mock
     mock_session = MagicMock()
     mock_session.get.return_value = mock_get_cm
 
-    # 4) Patch do ClientSession para retornar o mock_session no async with
-    mock_cs = MagicMock()
-    mock_cs.return_value.__aenter__.return_value = mock_session
-    mock_cs.return_value.__aexit__.return_value = None
+    # 4) patch do ClientSession no módulo correto
+    client_session_cm = AsyncMock()
+    client_session_cm.__aenter__.return_value = mock_session
+    client_session_cm.__aexit__.return_value = None
 
-    with patch("aiohttp.ClientSession", mock_cs):
-        # job de teste
-        job = MagicMock()
-        job.url = "http://localhost/job1/"
-        job.name = "job1"
-
+    # Act
+    with patch(
+        "jenkins_log.services.jenkins.aiohttp.ClientSession",
+        return_value=client_session_cm,
+    ):
+        job = MagicMock(url="http://localhost/job1/", name="job1")
         builds = await extract_builds_range(job)
 
+        # Assert
         assert isinstance(builds, BuildsList)
         assert builds.firstBuild.number == 1
         assert builds.lastCompletedBuild.number == 5
@@ -76,8 +89,12 @@ async def test_extract_builds_range():
 
 @patch("jenkins_log.services.jenkins.requests.get")
 def test_jenkins_jobs_list_non_200(mock_get):
+    # Arrange
     mock_resp = MagicMock(status_code=500)
     mock_get.return_value = mock_resp
 
+    # Act
     result = jenkins_jobs_list()
+
+    # Assert
     assert result is None
