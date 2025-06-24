@@ -1,0 +1,83 @@
+version: "3.8"
+services:
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypass
+      POSTGRES_DB: buildsdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  jenkins:
+    image: jenkins/jenkins:lts      # <-- ajuste aqui!
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - ./jenkins_home:/var/jenkins_home
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    command: "azurite-blob --blobHost 0.0.0.0"
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+    volumes:
+      - azurite_data:/data
+
+  app:
+    build: .
+    depends_on:
+      - postgres
+      - redis
+      - jenkins
+      - azurite
+    environment:
+      JENKINS_JOBS_LIST: "http://jenkins:8080/api/json"
+      USERNAME: "admin"
+      ACCESS_TOKEN: "11b38a249c82f285795d5f5c8f74f5ff4f"
+      CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcq...==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
+      CONTAINER_NAME: "seu-container"
+      BLOB_NAME: "seu-arquivo-destino"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      DB_URL: "postgresql+psycopg2://myuser:mypass@postgres:5432/buildsdb"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+      MAX_JOBS: "1"
+    volumes:
+      - .:/app
+    command: bash -c "poetry run alembic upgrade head && poetry run python -m jenkins_log.controller.jenkins_logs"
+
+  worker:
+    build: .
+    depends_on:
+      - postgres
+      - redis
+      - jenkins
+      - azurite
+    environment:
+      JENKINS_JOBS_LIST: "http://jenkins:8080/api/json"
+      USERNAME: "admin"
+      ACCESS_TOKEN: "11b38a249c82f285795d5f5c8f74f5ff4f"
+      CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcq...==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
+      CONTAINER_NAME: "seu-container"
+      BLOB_NAME: "seu-arquivo-destino"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      DB_URL: "postgresql+psycopg2://myuser:mypass@postgres:5432/buildsdb"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+    volumes:
+      - .:/app
+    command: poetry run celery -A tasks worker --loglevel=info
+
+volumes:
+  postgres_data:
+  jenkins_home:
+  azurite_data:
