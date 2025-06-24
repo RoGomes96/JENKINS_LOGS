@@ -24,7 +24,6 @@ COPY . .
 
 # Define variáveis de ambiente padrão
 ENV PYTHONUNBUFFERED=1
-ENV MAX_JOBS=1
 
 # Comando padrão - pode ser sobrescrito pelo docker-compose
 CMD ["poetry", "run", "python", "-m", "jenkins_log.controller.jenkins_logs"]

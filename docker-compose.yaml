@@ -42,9 +42,9 @@ services:
       - jenkins
       - azurite
     environment:
-      JENKINS_JOBS_LIST: "http://jenkins:8080/api/json"
+      JENKINS_JOBS_LIST: "http://s6006as2917/api/json"
       USERNAME: "admin"
-      ACCESS_TOKEN: "11b38a249c82f285795d5f5c8f74f5ff4f"
+      ACCESS_TOKEN: "11a9ac7251504c5cedb3cc55bc07b97e99"
       CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcq...==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
       CONTAINER_NAME: "seu-container"
       BLOB_NAME: "seu-arquivo-destino"
@@ -64,9 +64,9 @@ services:
       - jenkins
       - azurite
     environment:
-      JENKINS_JOBS_LIST: "http://jenkins:8080/api/json"
+      JENKINS_JOBS_LIST: "http://s6006as2917/api/json"
       USERNAME: "admin"
-      ACCESS_TOKEN: "11b38a249c82f285795d5f5c8f74f5ff4f"
+      ACCESS_TOKEN: "11a9ac7251504c5cedb3cc55bc07b97e99"
       CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcq...==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
       CONTAINER_NAME: "seu-container"
       BLOB_NAME: "seu-arquivo-destino"
