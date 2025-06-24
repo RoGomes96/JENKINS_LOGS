@@ -23,26 +23,26 @@ class TestesLog:
         m = pytest.MonkeyPatch()
         m.setattr(
             jl, "jenkins_jobs_list_task",
-            MagicMock(delay=lambda: MagicMock(get=lambda: SimpleNamespace(
-                jobs=[
-                    SimpleNamespace(name="job1", url="http://localhost/job1/")
+            MagicMock(delay=lambda: MagicMock(get=lambda: {
+                "jobs": [
+                    {"name": "job1", "url": "http://localhost/job1/"}
                 ]
-            )))
+            }))
         )
         m.setattr(
             jl, "extract_builds_range_task",
-            MagicMock(delay=lambda job: MagicMock(get=lambda: SimpleNamespace(
-                firstBuild=SimpleNamespace(number=1),
-                lastCompletedBuild=SimpleNamespace(number=1),
-                healthReport=[],
-                disabled="false"
-            )))
+            MagicMock(delay=lambda job: MagicMock(get=lambda: {
+                "firstBuild": {"number": 1},
+                "lastCompletedBuild": {"number": 1},
+                "healthReport": [],
+                "disabled": False
+            }))
         )
         m.setattr(
             jl, "report_failed_jobs_task",
             MagicMock(delay=lambda *args: MagicMock(get=lambda: []))
         )
-        fake_blob = MagicMock(url="http://blob/test/1")
+        fake_blob = {"url": "http://blob/test/1"}
         m.setattr(
             jl, "extract_builds_to_blob_task",
             MagicMock(delay=lambda url: MagicMock(get=lambda: fake_blob))
@@ -52,7 +52,7 @@ class TestesLog:
         result = await processar_logs_jenkins()
 
         # Assert
-        assert result is fake_blob
+        assert isinstance(result, list)
 
         # Verifica no DB de teste
         db = database.SessionLocal()
@@ -79,18 +79,20 @@ class TestesLog:
         m = pytest.MonkeyPatch()
         m.setattr(
             jl, "jenkins_jobs_list_task",
-            MagicMock(delay=lambda: MagicMock(get=lambda: SimpleNamespace(jobs=[
-                SimpleNamespace(name="job1", url="http://localhost/job1/")
-            ])))
+            MagicMock(delay=lambda: MagicMock(get=lambda: {
+                "jobs": [
+                    {"name": "job1", "url": "http://localhost/job1/"}
+                ]
+            }))
         )
         m.setattr(
             jl, "extract_builds_range_task",
-            MagicMock(delay=lambda job: MagicMock(get=lambda: SimpleNamespace(
-                firstBuild=SimpleNamespace(number=1),
-                lastCompletedBuild=SimpleNamespace(number=1),
-                healthReport=[],
-                disabled="false"
-            )))
+            MagicMock(delay=lambda job: MagicMock(get=lambda: {
+                "firstBuild": {"number": 1},
+                "lastCompletedBuild": {"number": 1},
+                "healthReport": [],
+                "disabled": False
+            }))
         )
         m.setattr(
             jl, "report_failed_jobs_task",
@@ -98,6 +100,7 @@ class TestesLog:
         )
 
         called = False
+
         def spy_delay(url):
             nonlocal called
             called = True
@@ -112,7 +115,7 @@ class TestesLog:
         result = await processar_logs_jenkins()
 
         # Assert
-        assert result is None
+        assert result == []
         assert called is False
         m.undo()
 
@@ -125,7 +128,10 @@ class TestesLog:
         m = pytest.MonkeyPatch()
         m.setattr(
             jl, "jenkins_jobs_list_task",
-            MagicMock(delay=lambda: MagicMock(get=lambda: SimpleNamespace(jobs=[])))
+            MagicMock(delay=lambda: MagicMock(get=lambda: {
+                "jobs": [
+                ]
+            }))
         )
 
         # Act

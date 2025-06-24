@@ -1,5 +1,6 @@
 # migrations/env.py
 from logging.config import fileConfig
+import os
 from sqlalchemy import engine_from_config, pool
 from alembic import context
 
@@ -10,7 +11,13 @@ config = context.config
 fileConfig(config.config_file_name)
 
 settings = Settings()
-config.set_main_option("sqlalchemy.url", settings.DB_URL)
+config.set_main_option(
+    "sqlalchemy.url",
+    os.getenv(
+        "DB_URL",
+        config.get_main_option("sqlalchemy.url")
+    )
+)
 
 # ← entregue aqui o seu MetaData
 target_metadata = Base.metadata

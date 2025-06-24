@@ -56,7 +56,7 @@ async def test_extract_builds_range():
         "firstBuild": {"number": 1},
         "lastCompletedBuild": {"number": 5},
         "healthReport": [],
-        "disabled": "false",
+        "disabled": False,
     })
 
     # 2) context manager para session.get()

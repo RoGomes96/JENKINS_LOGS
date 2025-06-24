@@ -24,7 +24,7 @@ class BuildsList(BaseModel):
     firstBuild: Build
     lastCompletedBuild: Build
     healthReport: List[HealthReport]
-    disabled: str
+    disabled: bool
 
 
 class ReportJob(BaseModel):

@@ -14,4 +14,8 @@ class Settings(BaseSettings):
     CONTAINER_NAME: str
     BLOB_NAME: str
     CELERY_BROKER_URL: str
-    DB_URL: str = os.getenv("DATABASE_URL", "sqlite:///./builds.db")
+    CELERY_RESULT_BACKEND: str
+    DB_URL: str = os.getenv(
+        "DB_URL",
+        "sqlite:///./test.db"
+    )

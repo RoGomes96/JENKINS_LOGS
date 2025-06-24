@@ -31,9 +31,14 @@ def jenkins_jobs_list() -> JobsList | None:
 
 
 async def extract_builds_range(job: Job) -> BuildsList | None:
+    print("Job recebido em extract_builds_range:", job)
     url = job.url + "api/json"
     async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
+        async with session.get(
+            url,
+            auth=aiohttp.BasicAuth('admin', settings.ACCESS_TOKEN)
+        ) as response:
+            print("Resposta recebida do Jenkins:", await response.json())
             try:
                 if response.status == 200:
                     build_list = BuildsList(**await response.json())
@@ -52,14 +57,14 @@ async def report_failed_jobs(
     reports: List[ReportList] = []
     session = SessionLocal()
     try:
-        if build_list.disable == "false":
+        if build_list.disabled == "false":
             if build_list.healthReport.description.contains("falharam"):
                 failed = ReportJob(
-                    job_name=job.name,
-                    url=job.url
+                    job_name=job["name"],
+                    url=job["url"]
                 )
                 session.add(failed)
-                report = ReportList(jobName=job.name, url=job.url)
+                report = ReportList(jobName=job["name"], url=job["url"])
                 reports.append(report)
         if reports:
             session.commit()
