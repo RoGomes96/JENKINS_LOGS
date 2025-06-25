@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import pytest
 from unittest.mock import patch, MagicMock
 from jenkins_log.controller.jenkins_logs import processar_logs_jenkins
@@ -33,7 +34,10 @@ async def test_processar_logs_jenkins(
     mock_report_failed.delay.return_value.get.return_value = []
 
     # Simula upload bem-sucedido e URL do blob
-    blob_resp = {"url": "http://blob/test/1"}
+    blob_resp = {
+        "url": "http://blob/test/1",
+        "created_at_jenkins": datetime(2022, 3, 17, 12, 14, 12, 175000)
+    }
     mock_extract_blob.delay.return_value.get.return_value = blob_resp
 
     # Act

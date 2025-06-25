@@ -1,12 +1,13 @@
 # tasks.py
 from celery import Celery
+from jenkins_log.services.blob import extract_builds_to_blob
 from settings import Settings
 from jenkins_log.services.jenkins import (
     jenkins_jobs_list,
     extract_builds_range,
     report_failed_jobs,
-    extract_builds_to_blob,
 )
+
 import asyncio
 
 settings = Settings()
@@ -14,7 +15,7 @@ settings = Settings()
 app = Celery(
     "tasks",
     broker=settings.CELERY_BROKER_URL,
-    backend=getattr(settings, "CELERY_RESULT_BACKEND", None)  # caso não esteja no settings
+    backend=getattr(settings, "CELERY_RESULT_BACKEND", None)
 )
 
 
@@ -45,8 +46,8 @@ def report_failed_jobs_task(build_list_dict, job_dict):
 
 
 @app.task
-def extract_builds_to_blob_task(url):
-    result = asyncio.run(extract_builds_to_blob(url))
+def extract_builds_to_blob_task(url, blob_name):
+    result, data_criacao_jenkins = asyncio.run(extract_builds_to_blob(url, blob_name))
     if result and hasattr(result, "url"):
-        return {"url": str(result.url)}
+        return {"url": str(result.url), "created_at_jenkins" : data_criacao_jenkins}
     return None

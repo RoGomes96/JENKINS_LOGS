@@ -1,24 +1,17 @@
 version: "3.8"
+
 services:
   postgres:
     image: postgres:15
     restart: always
     environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypass
-      POSTGRES_DB: buildsdb
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
-  jenkins:
-    image: jenkins/jenkins:lts      # <-- ajuste aqui!
-    ports:
-      - "8080:8080"
-      - "50000:50000"
-    volumes:
-      - ./jenkins_home:/var/jenkins_home
 
   redis:
     image: redis:7
@@ -39,19 +32,15 @@ services:
     depends_on:
       - postgres
       - redis
-      - jenkins
       - azurite
+    env_file:
+      - .env  # Carrega o arquivo .env
     environment:
-      JENKINS_JOBS_LIST: "http://s6006as2917/api/json"
-      USERNAME: "admin"
-      ACCESS_TOKEN: "11a9ac7251504c5cedb3cc55bc07b97e99"
-      CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcq...==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
-      CONTAINER_NAME: "seu-container"
-      BLOB_NAME: "seu-arquivo-destino"
-      CELERY_BROKER_URL: "redis://redis:6379/0"
-      DB_URL: "postgresql+psycopg2://myuser:mypass@postgres:5432/buildsdb"
-      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
-      MAX_JOBS: "1"
+      JENKINS_JOBS_LIST: "http://${USERNAME}:${ACCESS_TOKEN}@10.30.208.157:8080/api/json"
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
+      DB_URL: ${DB_URL}
+      MAX_JOBS: ${MAX_JOBS}
     volumes:
       - .:/app
     command: bash -c "poetry run alembic upgrade head && poetry run python -m jenkins_log.controller.jenkins_logs"
@@ -61,18 +50,15 @@ services:
     depends_on:
       - postgres
       - redis
-      - jenkins
       - azurite
+    env_file:
+      - .env  # Carrega o arquivo .env
     environment:
-      JENKINS_JOBS_LIST: "http://s6006as2917/api/json"
-      USERNAME: "admin"
-      ACCESS_TOKEN: "11a9ac7251504c5cedb3cc55bc07b97e99"
-      CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcq...==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
-      CONTAINER_NAME: "seu-container"
-      BLOB_NAME: "seu-arquivo-destino"
-      CELERY_BROKER_URL: "redis://redis:6379/0"
+      JENKINS_JOBS_LIST: "http://${USERNAME}:${ACCESS_TOKEN}@10.30.208.157:8080/api/json"
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
       DB_URL: "postgresql+psycopg2://myuser:mypass@postgres:5432/buildsdb"
-      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+      MAX_JOBS: ${MAX_JOBS}
     volumes:
       - .:/app
     command: poetry run celery -A tasks worker --loglevel=info

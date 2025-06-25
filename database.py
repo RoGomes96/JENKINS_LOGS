@@ -1,5 +1,4 @@
 # db.py
-from datetime import datetime
 from sqlalchemy import (
     Column,
     Integer,
@@ -23,6 +22,7 @@ class BuildRecord(Base):
     job_name = Column(String, nullable=False)
     build_number = Column(Integer, nullable=False)
     blob_url = Column(String, nullable=False)
+    created_at_jenkins = Column(DateTime, nullable=False)
     created_at = Column(DateTime, default=func.now())
     __table_args__ = (
         UniqueConstraint("job_name", "build_number", name="uq_job_build"),
