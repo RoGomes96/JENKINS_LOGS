@@ -9,9 +9,10 @@ settings = Settings()
 
 
 def jenkins_jobs_list() -> JobsList | None:
+    url = f"{settings.JENKINS_JOBS_LIST}"
     try:
         response = requests.get(
-            settings.JENKINS_JOBS_LIST, auth=(settings.USERNAME, settings.ACCESS_TOKEN)
+            url, auth=(settings.USERNAME, settings.ACCESS_TOKEN)
         )
         if response.status_code == 200:
             jobs_list = JobsList(**response.json())
@@ -34,7 +35,7 @@ async def extract_builds_range(job: Job) -> BuildsList | None:
                     build_list = BuildsList(**await response.json())
                     return build_list
             except Exception as e:
-                print(f"Erro ao obter builds do job {job.name} no jenkins: {e}".)
+                print(f"Erro ao obter builds do job {job.name} no jenkins: {e}.")
                 return None
 
 
