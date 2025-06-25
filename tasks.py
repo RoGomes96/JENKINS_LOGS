@@ -15,7 +15,7 @@ settings = Settings()
 app = Celery(
     "tasks",
     broker=settings.CELERY_BROKER_URL,
-    backend=getattr(settings, "CELERY_RESULT_BACKEND", None)
+    backend=getattr(settings, "CELERY_RESULT_BACKEND", None),
 )
 
 
@@ -31,6 +31,7 @@ def jenkins_jobs_list_task():
 @app.task
 def extract_builds_range_task(job_dict):
     from jenkins_log.schemas import Job
+
     job = Job(**job_dict)
     result = asyncio.run(extract_builds_range(job))
     return result.model_dump() if result else None
@@ -39,6 +40,7 @@ def extract_builds_range_task(job_dict):
 @app.task
 def report_failed_jobs_task(build_list_dict, job_dict):
     from jenkins_log.schemas import BuildsList, Job
+
     build_list = BuildsList(**build_list_dict)
     job = Job(**job_dict)
     result = asyncio.run(report_failed_jobs(build_list, job))
@@ -49,5 +51,5 @@ def report_failed_jobs_task(build_list_dict, job_dict):
 def extract_builds_to_blob_task(url, blob_name):
     result, data_criacao_jenkins = asyncio.run(extract_builds_to_blob(url, blob_name))
     if result and hasattr(result, "url"):
-        return {"url": str(result.url), "created_at_jenkins" : data_criacao_jenkins}
+        return {"url": str(result.url), "created_at_jenkins": data_criacao_jenkins}
     return None

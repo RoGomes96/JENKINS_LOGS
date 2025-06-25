@@ -23,45 +23,55 @@ class TestesLog:
         # Arrange: Mock Celery tasks
         m = pytest.MonkeyPatch()
         m.setattr(
-            jl, "jenkins_jobs_list_task",
-            MagicMock(delay=lambda: MagicMock(get=lambda: {
-                "jobs": [
-                    {"name": "job1", "url": "http://localhost/job1/"}
-                ]
-            }))
+            jl,
+            "jenkins_jobs_list_task",
+            MagicMock(
+                delay=lambda: MagicMock(
+                    get=lambda: {
+                        "jobs": [{"name": "job1", "url": "http://localhost/job1/"}]
+                    }
+                )
+            ),
         )
         m.setattr(
-            jl, "extract_builds_range_task",
-            MagicMock(delay=lambda job: MagicMock(get=lambda: {
-                "firstBuild": {"number": 1},
-                "lastCompletedBuild": {"number": 1},
-                "healthReport": [],
-                "disabled": False
-            }))
+            jl,
+            "extract_builds_range_task",
+            MagicMock(
+                delay=lambda job: MagicMock(
+                    get=lambda: {
+                        "firstBuild": {"number": 1},
+                        "lastCompletedBuild": {"number": 1},
+                        "healthReport": [],
+                        "disabled": False,
+                    }
+                )
+            ),
         )
         m.setattr(
-            jl, "report_failed_jobs_task",
-            MagicMock(delay=lambda *args: MagicMock(get=lambda: []))
+            jl,
+            "report_failed_jobs_task",
+            MagicMock(delay=lambda *args: MagicMock(get=lambda: [])),
         )
         fake_blob = {
             "url": "http://blob/test/1",
-            "created_at_jenkins": datetime(2022, 3, 17, 12, 14, 12, 175000)  # Exemplo de data
+            "created_at_jenkins": datetime(
+                2022, 3, 17, 12, 14, 12, 175000
+            ),  # Exemplo de data
         }
         m.setattr(
-            jl, "extract_builds_to_blob_task",
-            MagicMock(
-                delay=lambda *args,
-                **kwargs: MagicMock(get=lambda: fake_blob)
-            )
+            jl,
+            "extract_builds_to_blob_task",
+            MagicMock(delay=lambda *args, **kwargs: MagicMock(get=lambda: fake_blob)),
         )
 
         m.setattr(
-            jl, "report_failed_jobs_task",
+            jl,
+            "report_failed_jobs_task",
             MagicMock(
                 delay=lambda *args: MagicMock(
-                    get=lambda: [
-                        {"jobName": "job1", "url": "url"}
-                    ]))
+                    get=lambda: [{"jobName": "job1", "url": "url"}]
+                )
+            ),
         )
         # Act
         result = await processar_logs_jenkins()
@@ -91,38 +101,49 @@ class TestesLog:
         dt_base = dt_base.replace(microsecond=0)
         timestamp_ms = int(dt_base.timestamp() * 1000)
         db = database.SessionLocal()
-        db.add(BuildRecord(
-            job_name="job1",
-            build_number=1,
-            blob_url="old",
-            created_at_jenkins=dt_base
-            ))
+        db.add(
+            BuildRecord(
+                job_name="job1",
+                build_number=1,
+                blob_url="old",
+                created_at_jenkins=dt_base,
+            )
+        )
         db.commit()
         db.close()
 
         # Mock Celery tasks
         m = pytest.MonkeyPatch()
         m.setattr(
-            jl, "jenkins_jobs_list_task",
-            MagicMock(delay=lambda: MagicMock(get=lambda: {
-                "jobs": [
-                    {"name": "job1", "url": "http://localhost/job1/"}
-                ]
-            }))
+            jl,
+            "jenkins_jobs_list_task",
+            MagicMock(
+                delay=lambda: MagicMock(
+                    get=lambda: {
+                        "jobs": [{"name": "job1", "url": "http://localhost/job1/"}]
+                    }
+                )
+            ),
         )
         m.setattr(
-            jl, "extract_builds_range_task",
-            MagicMock(delay=lambda job: MagicMock(get=lambda: {
-                "firstBuild": {"number": 1},
-                "timestamp": timestamp_ms,
-                "lastCompletedBuild": {"number": 1},
-                "healthReport": [],
-                "disabled": False
-            }))
+            jl,
+            "extract_builds_range_task",
+            MagicMock(
+                delay=lambda job: MagicMock(
+                    get=lambda: {
+                        "firstBuild": {"number": 1},
+                        "timestamp": timestamp_ms,
+                        "lastCompletedBuild": {"number": 1},
+                        "healthReport": [],
+                        "disabled": False,
+                    }
+                )
+            ),
         )
         m.setattr(
-            jl, "report_failed_jobs_task",
-            MagicMock(delay=lambda *args: MagicMock(get=lambda: []))
+            jl,
+            "report_failed_jobs_task",
+            MagicMock(delay=lambda *args: MagicMock(get=lambda: [])),
         )
 
         called = False
@@ -132,10 +153,7 @@ class TestesLog:
             called = True
             return MagicMock(get=lambda: None)
 
-        m.setattr(
-            jl, "extract_builds_to_blob_task",
-            MagicMock(delay=spy_delay)
-        )
+        m.setattr(jl, "extract_builds_to_blob_task", MagicMock(delay=spy_delay))
 
         # Act
         result = await processar_logs_jenkins()
@@ -153,11 +171,9 @@ class TestesLog:
         # Arrange: Mock lista vazia
         m = pytest.MonkeyPatch()
         m.setattr(
-            jl, "jenkins_jobs_list_task",
-            MagicMock(delay=lambda: MagicMock(get=lambda: {
-                "jobs": [
-                ]
-            }))
+            jl,
+            "jenkins_jobs_list_task",
+            MagicMock(delay=lambda: MagicMock(get=lambda: {"jobs": []})),
         )
 
         # Act

@@ -15,15 +15,15 @@ async def test_extract_builds_to_blob_old_build():
     mock_blob = AsyncMock()
     mock_blob.upload_blob = AsyncMock()
 
-    with patch("jenkins_log.services.blob.BlobServiceClient") as mock_bsc, \
-         patch("aiohttp.ClientSession") as mock_sess:
+    with (
+        patch("jenkins_log.services.blob.BlobServiceClient") as mock_bsc,
+        patch("aiohttp.ClientSession") as mock_sess,
+    ):
         mock_bsc.return_value.get_blob_client.return_value = mock_blob
 
         mock_resp = AsyncMock()
         mock_resp.status = 200
-        mock_resp.read.return_value = json.dumps({
-            "timestamp": timestamp_ms
-        }).encode()
+        mock_resp.read.return_value = json.dumps({"timestamp": timestamp_ms}).encode()
 
         mock_get_cm = AsyncMock()
         mock_get_cm.__aenter__.return_value = mock_resp
@@ -36,7 +36,9 @@ async def test_extract_builds_to_blob_old_build():
         await extract_builds_to_blob("http://mockurl/api/json", "mockblob")
 
         # Assert
-        assert mock_blob.upload_blob.called, "Build mais ANTIGA que 7 dias, será salva no blob."
+        assert mock_blob.upload_blob.called, (
+            "Build mais ANTIGA que 7 dias, será salva no blob."
+        )
 
 
 @pytest.mark.asyncio
@@ -51,15 +53,15 @@ async def test_extract_builds_to_blob_new_build():
     mock_container = MagicMock()
     mock_container.get_blob_client.return_value = mock_blob
 
-    with patch("jenkins_log.services.blob.BlobServiceClient") as mock_bsc, \
-         patch("aiohttp.ClientSession") as mock_sess:
+    with (
+        patch("jenkins_log.services.blob.BlobServiceClient") as mock_bsc,
+        patch("aiohttp.ClientSession") as mock_sess,
+    ):
         mock_bsc.return_value.get_container_client.return_value = mock_container
 
         mock_resp = AsyncMock()
         mock_resp.status = 200
-        mock_resp.read.return_value = json.dumps({
-            "timestamp": timestamp_ms
-        }).encode()
+        mock_resp.read.return_value = json.dumps({"timestamp": timestamp_ms}).encode()
 
         mock_get_cm = AsyncMock()
         mock_get_cm.__aenter__.return_value = mock_resp
@@ -71,7 +73,9 @@ async def test_extract_builds_to_blob_new_build():
         await extract_builds_to_blob("http://mockurl/api/json", "mockblob")
 
         # Assert
-        assert not mock_blob.upload_blob.called, "Build mais RECENTE que 7 dias, não será salva no blob."
+        assert not mock_blob.upload_blob.called, (
+            "Build mais RECENTE que 7 dias, não será salva no blob."
+        )
 
 
 @pytest.mark.asyncio
@@ -83,15 +87,15 @@ async def test_extract_builds_to_blob_upload_error():
     mock_blob = AsyncMock()
     mock_blob.upload_blob.side_effect = Exception("Falha upload")
 
-    with patch("jenkins_log.services.blob.BlobServiceClient") as mock_bsc, \
-         patch("aiohttp.ClientSession") as mock_sess:
+    with (
+        patch("jenkins_log.services.blob.BlobServiceClient") as mock_bsc,
+        patch("aiohttp.ClientSession") as mock_sess,
+    ):
         mock_bsc.return_value.get_blob_client.return_value = mock_blob
 
         mock_resp = AsyncMock()
         mock_resp.status = 200
-        mock_resp.read.return_value = json.dumps({
-            "timestamp": timestamp_ms
-        }).encode()
+        mock_resp.read.return_value = json.dumps({"timestamp": timestamp_ms}).encode()
 
         mock_get_cm = AsyncMock()
         mock_get_cm.__aenter__.return_value = mock_resp
@@ -111,8 +115,10 @@ async def test_extract_builds_to_blob_upload_error():
 async def test_extract_builds_to_blob_malformed_json():
     # Arrange:
     mock_blob = AsyncMock()
-    with patch("jenkins_log.services.blob.BlobServiceClient") as mock_bsc, \
-         patch("aiohttp.ClientSession") as mock_sess:
+    with (
+        patch("jenkins_log.services.blob.BlobServiceClient") as mock_bsc,
+        patch("aiohttp.ClientSession") as mock_sess,
+    ):
         mock_bsc.return_value.get_blob_client.return_value = mock_blob
 
         mock_resp = AsyncMock()

@@ -13,9 +13,7 @@ def db_engine(tmp_path, monkeypatch):
     engine = create_engine(url, connect_args={"check_same_thread": False})
     database.Base.metadata.create_all(engine)
 
-    TestSessionLocal = sessionmaker(
-        autocommit=False, autoflush=False, bind=engine
-    )
+    TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
     monkeypatch.setattr(database, "SessionLocal", TestSessionLocal)
 

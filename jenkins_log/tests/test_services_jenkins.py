@@ -1,10 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from jenkins_log.schemas import BuildsList
-from jenkins_log.services.jenkins import (
-    jenkins_jobs_list,
-    extract_builds_range
-)
+from jenkins_log.services.jenkins import jenkins_jobs_list, extract_builds_range
 
 
 @patch("jenkins_log.services.jenkins.requests.get")
@@ -51,12 +48,14 @@ async def test_extract_builds_range():
     # 1) mock da resposta JSON
     mock_response = AsyncMock()
     mock_response.status = 200
-    mock_response.json = AsyncMock(return_value={
-        "firstBuild": {"number": 1},
-        "lastCompletedBuild": {"number": 5},
-        "healthReport": [],
-        "disabled": False,
-    })
+    mock_response.json = AsyncMock(
+        return_value={
+            "firstBuild": {"number": 1},
+            "lastCompletedBuild": {"number": 5},
+            "healthReport": [],
+            "disabled": False,
+        }
+    )
 
     # 2) context manager para session.get()
     mock_get_cm = AsyncMock()
