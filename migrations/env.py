@@ -12,11 +12,7 @@ fileConfig(config.config_file_name)
 
 settings = Settings()
 config.set_main_option(
-    "sqlalchemy.url",
-    os.getenv(
-        "DB_URL",
-        config.get_main_option("sqlalchemy.url")
-    )
+    "sqlalchemy.url", os.getenv("DB_URL", config.get_main_option("sqlalchemy.url"))
 )
 
 # ← entregue aqui o seu MetaData

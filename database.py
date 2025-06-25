@@ -1,5 +1,4 @@
 # db.py
-from datetime import datetime
 from sqlalchemy import (
     Column,
     Integer,
@@ -23,6 +22,7 @@ class BuildRecord(Base):
     job_name = Column(String, nullable=False)
     build_number = Column(Integer, nullable=False)
     blob_url = Column(String, nullable=False)
+    created_at_jenkins = Column(DateTime, nullable=False)
     created_at = Column(DateTime, default=func.now())
     __table_args__ = (
         UniqueConstraint("job_name", "build_number", name="uq_job_build"),
@@ -30,7 +30,7 @@ class BuildRecord(Base):
 
 
 class FailedJobReport(Base):
-    __tablename__ = 'failed_job_reports'
+    __tablename__ = "failed_job_reports"
 
     id = Column(Integer, primary_key=True, index=True)
     job_name = Column(String, nullable=False)
@@ -43,13 +43,10 @@ engine = create_engine(
     settings.DB_URL,
     # apenas para SQLite; Postgres ignora
     connect_args={"check_same_thread": False}
-    if settings.DB_URL.startswith("sqlite") else {}
+    if settings.DB_URL.startswith("sqlite")
+    else {},
 )
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine
-)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def init_db():

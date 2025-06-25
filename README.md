@@ -8,11 +8,13 @@ Este projeto tem como objetivo processar logs de builds do Jenkins, extrair os l
 
 -Filtra builds de acordo com regras (por exemplo: logs antigos, falhas, etc).
 
+-Separa o jobs que tiveram falhas na build e as salva em um banco de dados (usando PostgreSQL).
+
 -Verifica se os logs dos builds já foram processados (usando PostgreSQL).
 
 -Baixa os logs dos builds e os salva no **Azure Blob Storage**.
 
--Registra os logs processados no banco para evitar reprocessamento.
+-Registra os logs processados no banco para evita reprocessamento.
 
 
  
@@ -113,6 +115,9 @@ Antes de executar o projeto, você precisará:
 3. Faça commit das suas alterações (`git commit -am 'Adicionando nova funcionalidade'`).
 4. Envie para a branch do seu fork (`git push origin feature-nome`).
 5. Abra um Pull Request.
+
+6. Para backup do banco: docker run --rm -v jenkins_logs_postgres_data:/var/lib/postgresql/data -v $(pwd):/backup ubuntu bash -c "cd /var/lib/postgresql/data && tar xzf /backup/backup.tar.gz --strip 1"
+
  
 ## Licença
  
